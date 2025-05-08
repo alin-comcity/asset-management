@@ -3,17 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
     protected $fillable = [
-        'asset_name',
-        'asset_cat_id',
-        'asset_desc',
-        'asset_tag',
-        'asset_serial',
-        'asset_type',
-        'purchase_date',
-        'asset_image'
+        'emp_id',
+        'emp_name',
+        'emp_email'
     ];
 }

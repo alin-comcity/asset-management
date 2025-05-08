@@ -16,6 +16,7 @@ use App\Filament\Resources\AssetsResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\AssetsResource\RelationManagers;
 use Filament\Forms\Get;
+use Laravel\Pail\ValueObjects\Origin\Console;
 
 class AssetsResource extends Resource
 {
@@ -34,15 +35,34 @@ class AssetsResource extends Resource
 
                 Forms\Components\Select::make('asset_cat_id')
                     ->label('Category')
-                    ->relationship(name: 'categories', titleAttribute: 'cat_name')
+                    ->relationship('category', 'cat_name')
                     ->preload()
-                    ->live()
                     ->searchable()
-                    ->afterStateUpdated(function ($state, callable $set) {
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) { //after select any category item
                         if ($state) {
-                            // Example: Set asset_tag based on category ID (can use name too)
-                            $prefix = 'CAT-' . str_pad($state, 2, '0', STR_PAD_LEFT);
-                            $set('asset_tag', $prefix . '-' . now()->format('His')); // CAT-01-142533
+                            $slug = AssetCategory::find($state);
+                            $last = Assets::where('asset_tag', 'like', 'CCTL-' . $slug->cat_slug . '%')
+                                ->orderByDesc('id')
+                                ->first();
+
+
+                            $remve_string = $last && preg_match('/(\d+)$/', $last->asset_tag, $matches);
+                            if ($remve_string) {
+                                $number = $matches[1];
+                                $number++;
+                            } else {
+                                $number = 1;
+                            }
+
+
+                            if ($last) {
+                                $assetTag = 'CCTL-' . strtoupper($slug->cat_slug) . '-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+                                $set('asset_tag', $assetTag);
+                            } else {
+                                $assetTag = 'CCTL-' . strtoupper($slug->cat_slug) . '-' . $number;
+                                $set('asset_tag', $assetTag);
+                            }
                         }
                     }),
 
@@ -55,24 +75,6 @@ class AssetsResource extends Resource
                     ->label('Asset Tag')
                     ->required()
                     ->reactive(),
-                // ->disabled()
-                // ->dehydrated()
-                // ->default(function () {
-                //     // Auto increment id. ex. 'CCTL-001', 'CCTL-002' 
-                //     $cat =  AssetCategory::where('asset_tag', 'like', 'CCTL-' . '%')
-                //         ->orderByDesc('id')
-                //         ->first();
-                //     $last = Assets::where('asset_tag', 'like', 'CCTL-' . '%')
-                //         ->orderByDesc('id')
-                //         ->first();
-                //     $next = 1;
-                //     if ($last && preg_match('/-(\d{4})$/', $last->asset_tag, $matches)) {
-                //         $next = (int) $matches[1] + 1;
-                //     }
-                //     return 'CCTL-' . str_pad($next, 4, '0', STR_PAD_LEFT);
-                // }),
-
-
 
                 Forms\Components\TextInput::make('asset_serial')
                     ->label('Asset Serial')

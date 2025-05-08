@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Assets extends Model
 {
@@ -18,8 +17,8 @@ class Assets extends Model
         'asset_image'
     ];
 
-    public function categories(): BelongsTo
+    public function category()
     {
-        return $this->belongsTo(AssetCategory::class);
+        return $this->belongsTo(AssetCategory::class, 'asset_cat_id');
     }
 }

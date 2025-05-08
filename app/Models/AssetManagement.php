@@ -27,4 +27,19 @@ class AssetManagement extends Model
     {
         return $this->hasMany(AssetCategory::class);
     }
+
+    public function asset()
+    {
+        return $this->belongsTo(Assets::class, 'asset_id');
+    }
+
+    public function assetCategory()
+    {
+        return $this->belongsTo(AssetCategory::class, 'asset_cat_id');
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(\App\Models\Employee::class, 'emp_id');
+    }
 }

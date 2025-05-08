@@ -23,21 +23,35 @@ class AssetManagementResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('asset_id')
-                    ->label('Asset')
-                    ->relationship('assetList', 'asset_name')
-                    ->preload()
-                    ->searchable(),
-                Forms\Components\Select::make('emp_id')
-                    ->label('Employee')
-                    ->relationship('empList', 'emp_name')
-                    ->preload()
-                    ->searchable(),
                 Forms\Components\Select::make('asset_cat_id')
                     ->label('Asset Category')
                     ->relationship('assetCat', 'cat_name')
                     ->preload()
-                    ->searchable(),
+                    ->searchable()
+                    ->reactive() // Trigger changes on update
+                    ->afterStateUpdated(fn(callable $set) => $set('asset_id', null)), // clear asset_id on category change
+
+                Forms\Components\Select::make('asset_id')
+                    ->label('Asset')
+                    ->options(function (callable $get) {
+                        $categoryId = $get('asset_cat_id');
+
+                        if (!$categoryId) {
+                            return [];
+                        }
+
+                        return \App\Models\Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
+                    })
+                    ->searchable()
+                    ->reactive()
+                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null), // Show only if category selected             
+
+                Forms\Components\Select::make('emp_id')
+                    ->label('Employee All')
+                    ->relationship('empList', 'emp_name')
+                    ->preload()
+                    ->searchable()
+                    ->visible(fn(callable $get) => $get('asset_id') !== null), // Show only if asset selected
             ]);
     }
 
@@ -45,11 +59,14 @@ class AssetManagementResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('asset_id')
+                Tables\Columns\TextColumn::make('asset.asset_name')
+                    ->label('Asset Name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('emp_id')
+                Tables\Columns\TextColumn::make('assetCategory.cat_name')
+                    ->label('Asset Category')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('asset_cat_id')
+                Tables\Columns\TextColumn::make('employee.emp_name')
+                    ->label('Employee Name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

@@ -44,14 +44,31 @@ class AssetManagementResource extends Resource
                     })
                     ->searchable()
                     ->reactive()
-                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null), // Show only if category selected             
+                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null),
 
                 Forms\Components\Select::make('emp_id')
-                    ->label('Employee All')
-                    ->relationship('empList', 'emp_name')
-                    ->preload()
+                    ->label('Assigned Employee')
+                    ->options(function (callable $get) {
+                        $assetId = $get('asset_id');
+
+                        if (!$assetId) {
+                            return [];
+                        }
+
+                        $asset = \App\Models\Assets::find($assetId);
+
+                        if (!$asset || !$asset->employee_id) {
+                            return [];
+                        }
+
+                        $employee = \App\Models\Employee::find($asset->employee_id);
+
+                        return $employee ? [$employee->id => $employee->emp_name] : [];
+                    })
                     ->searchable()
-                    ->visible(fn(callable $get) => $get('asset_id') !== null), // Show only if asset selected
+                    ->reactive()
+                    ->visible(fn(callable $get) => $get('asset_id') !== null),
+
             ]);
     }
 

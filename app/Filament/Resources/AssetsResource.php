@@ -111,7 +111,8 @@ class AssetsResource extends Resource
                 Tables\Columns\TextColumn::make('asset_name')
                     ->label('Asset Name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('asset_cat_id')
+                // Tables\Columns\TextColumn::make('asset_cat_id')
+                Tables\Columns\TextColumn::make('category.cat_name')
                     ->label('Category')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('asset_desc')

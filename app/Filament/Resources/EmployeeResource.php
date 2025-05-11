@@ -25,6 +25,7 @@ class EmployeeResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('emp_id')
                     ->label('Employee Id')
+                    ->numeric()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('emp_name')

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('asset_management', function (Blueprint $table) {
             $table->id();
-            $table->string('asset_id')->nullable();
-            $table->string('emp_id')->nullable();
-            $table->string('asset_cat_id')->nullable();
+            $table->integer('cat_id');
+            $table->integer('emp_id');
+            $table->date('assign_date');
             $table->timestamps();
         });
     }

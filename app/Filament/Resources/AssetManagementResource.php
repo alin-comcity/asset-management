@@ -2,16 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AssetManagementResource\Pages;
-use App\Filament\Resources\AssetManagementResource\RelationManagers;
-use App\Models\AssetManagement;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Assets;
+use App\Models\Employee;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\AssetCategory;
+use App\Models\AssetManagement;
+use Filament\Resources\Resource;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\AssetManagementResource\Pages;
+use App\Filament\Resources\AssetManagementResource\RelationManagers;
 
 class AssetManagementResource extends Resource
 {
@@ -23,52 +27,30 @@ class AssetManagementResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('asset_cat_id')
-                    ->label('Asset Category')
-                    ->relationship('assetCat', 'cat_name')
+                Forms\Components\Select::make('cat_id')
+                    ->label('Category')
+                    ->relationship('category', 'cat_name')
                     ->preload()
-                    ->searchable()
-                    ->reactive() // Trigger changes on update
-                    ->afterStateUpdated(fn(callable $set) => $set('asset_id', null)), // clear asset_id on category change
+                    ->searchable(),
 
                 Forms\Components\Select::make('asset_id')
                     ->label('Asset')
-                    ->options(function (callable $get) {
-                        $categoryId = $get('asset_cat_id');
-
-                        if (!$categoryId) {
-                            return [];
-                        }
-
-                        return \App\Models\Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
-                    })
+                    ->relationship('assets', 'asset_name')
+                    ->multiple()
+                    ->preload()
                     ->searchable()
-                    ->reactive()
-                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null),
+                    ->getOptionLabelFromRecordUsing(function ($record) {
+                        return $record->asset_name . ' (' . $record->asset_serial . ')';
+                    }),
 
                 Forms\Components\Select::make('emp_id')
-                    ->label('Assigned Employee')
-                    ->options(function (callable $get) {
-                        $assetId = $get('asset_id');
+                    ->label('Employee')
+                    ->relationship('employee', 'emp_name')
+                    ->preload()
+                    ->searchable(),
 
-                        if (!$assetId) {
-                            return [];
-                        }
-
-                        $asset = \App\Models\Assets::find($assetId);
-
-                        if (!$asset || !$asset->employee_id) {
-                            return [];
-                        }
-
-                        $employee = \App\Models\Employee::find($asset->employee_id);
-
-                        return $employee ? [$employee->id => $employee->emp_name] : [];
-                    })
-                    ->searchable()
-                    ->reactive()
-                    ->visible(fn(callable $get) => $get('asset_id') !== null),
-
+                Forms\Components\DatePicker::make('assign_date')
+                    ->required(),
             ]);
     }
 
@@ -76,15 +58,29 @@ class AssetManagementResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('asset.asset_name')
+                Tables\Columns\TextColumn::make('category2.cat_name')
+                    ->label('Category')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('employee2.emp_name')
+                    ->label('Employee')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('assets.asset_name')
                     ->label('Asset Name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('assetCategory.cat_name')
-                    ->label('Asset Category')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('employee.emp_name')
-                    ->label('Employee Name')
-                    ->searchable(),
+                    ->listWithLineBreaks()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('assets.asset_type')
+                    ->label('Asset Type')
+                    ->listWithLineBreaks()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('assign_date')
+                    ->date()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

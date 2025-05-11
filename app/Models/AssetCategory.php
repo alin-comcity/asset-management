@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Filament\Support\Assets\Asset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +16,6 @@ class AssetCategory extends Model
 
     public function asset(): HasMany
     {
-        return $this->hasMany(Asset::class);
+        return $this->hasMany(Assets::class, 'asset_cat_id');
     }
 }

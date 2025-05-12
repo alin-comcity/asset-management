@@ -2,19 +2,15 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetManagement extends Model
 {
-    protected $table = "asset_management";
-
     protected $fillable = [
-        'cat_id',
+        'asset_id',
         'emp_id',
-        'assign_date'
+        'asset_cat_id'
     ];
 
     public function assetList(): HasMany
@@ -22,26 +18,15 @@ class AssetManagement extends Model
         return $this->hasMany(Assets::class);
     }
 
+    public function empList(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
     public function assetCat(): HasMany
     {
         return $this->hasMany(AssetCategory::class);
     }
-
-    public function category()
-    {
-        return $this->belongsTo(AssetCategory::class, 'id');
-    }
-
-    public function category2()
-    {
-        return $this->belongsTo(AssetCategory::class, 'cat_id');
-    }
-
-    public function employee2()
-    {
-        return $this->belongsTo(Employee::class, 'emp_id');
-    }
-
 
     public function asset()
     {
@@ -55,17 +40,6 @@ class AssetManagement extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'emp_id');
-    }
-
-    // it's for AssetManagement and Employee many to many 
-    public function employees()
-    {
-        return $this->belongsToMany(Employee::class);
-    }
-
-    public function assets()
-    {
-        return $this->belongsToMany(Assets::class, 'asset_asset_management', 'asset_management_id', 'asset_id');
+        return $this->belongsTo(\App\Models\Employee::class, 'emp_id');
     }
 }

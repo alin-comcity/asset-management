@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AssetManagementResource\Pages;
-use App\Filament\Resources\AssetManagementResource\RelationManagers;
-use App\Models\AssetManagement;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Assets;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\AssetManagement;
+use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\AssetManagementResource\Pages;
+use App\Filament\Resources\AssetManagementResource\RelationManagers;
 
 class AssetManagementResource extends Resource
 {
@@ -25,7 +26,7 @@ class AssetManagementResource extends Resource
             ->schema([
                 Forms\Components\Select::make('asset_cat_id')
                     ->label('Asset Category')
-                    ->relationship('assetCat', 'cat_name')
+                    ->relationship('category', 'cat_name')
                     ->preload()
                     ->searchable()
                     ->reactive() // Trigger changes on update
@@ -40,7 +41,7 @@ class AssetManagementResource extends Resource
                             return [];
                         }
 
-                        return \App\Models\Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
+                        return Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
                     })
                     ->searchable()
                     ->reactive()
@@ -52,6 +53,22 @@ class AssetManagementResource extends Resource
                     ->preload()
                     ->searchable()
                     ->visible(fn(callable $get) => $get('asset_id') !== null), // Show only if asset selected
+
+                Forms\Components\Select::make('status')
+                    ->label('Status')
+                    ->relationship('empList', 'emp_name')
+                    ->preload()
+                    ->options(
+                        [
+                            'new' => 'New',
+                            'old' => 'Old',
+                            'Borrowed' => 'Borrowed'
+                        ]
+                    )
+                    ->searchable(),
+
+                Forms\Components\DatePicker::make('assign_date')
+                    ->label('Assign Date'),
             ]);
     }
 
@@ -62,12 +79,17 @@ class AssetManagementResource extends Resource
                 Tables\Columns\TextColumn::make('asset.asset_name')
                     ->label('Asset Name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('assetCategory.cat_name')
+                Tables\Columns\TextColumn::make('category.cat_name')
                     ->label('Asset Category')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('employee.emp_name')
                     ->label('Employee Name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('assign_date')
+                    ->label('Assign Date'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

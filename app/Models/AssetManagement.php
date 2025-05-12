@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AssetManagement extends Model
 {
     protected $fillable = [
+        'cat_id',
         'asset_id',
         'emp_id',
-        'asset_cat_id'
+        'status',
+        'assign_date'
     ];
 
     public function assetList(): HasMany
@@ -41,5 +43,10 @@ class AssetManagement extends Model
     public function employee()
     {
         return $this->belongsTo(\App\Models\Employee::class, 'emp_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(AssetCategory::class, 'cat_id');
     }
 }

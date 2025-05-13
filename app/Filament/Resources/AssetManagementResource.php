@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\AssetManagement;
 use Filament\Resources\Resource;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\AssetManagementResource\Pages;
@@ -32,8 +33,16 @@ class AssetManagementResource extends Resource
                     ->reactive() // Trigger changes on update
                     ->afterStateUpdated(fn(callable $set) => $set('asset_id', null)), // clear asset_id on category change
 
-                Forms\Components\Select::make('asset_id')
-                    ->label('Asset')
+
+                Forms\Components\Select::make('assets') // use relationship name!
+                    ->label('Assets')
+                    ->relationship('assets', 'asset_name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->getOptionLabelFromRecordUsing(function ($record) {
+                        return $record->asset_name;
+                    })
                     ->options(function (callable $get) {
                         $categoryId = $get('asset_cat_id');
 
@@ -43,16 +52,21 @@ class AssetManagementResource extends Resource
 
                         return Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
                     })
-                    ->searchable()
                     ->reactive()
-                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null), // Show only if category selected             
+                    ->visible(fn(callable $get) => $get('asset_cat_id') !== null) // Show only if category selected             
+                    ->afterStateHydrated(function ($set, $record) {
+                        if ($record) {
+                            $set('assets', $record->assets->pluck('id')->toArray());
+                        }
+                    }),
+
 
                 Forms\Components\Select::make('emp_id')
                     ->label('Employee All')
                     ->relationship('empList', 'emp_name')
                     ->preload()
                     ->searchable()
-                    ->visible(fn(callable $get) => $get('asset_id') !== null), // Show only if asset selected
+                    ->visible(fn(callable $get) => $get('assets') !== null), // Show only if asset selected
 
                 Forms\Components\Select::make('status')
                     ->label('Status')

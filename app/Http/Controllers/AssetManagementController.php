@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AssetCategory;
 use App\Models\Assets;
 use App\Models\AssetManagement;
-
+use App\Models\Employee;
 
 class AssetManagementController extends Controller
 {
@@ -13,9 +13,11 @@ class AssetManagementController extends Controller
     {
         // $test = Assets::with('assetmanagement')->find(1);
         // return $test;
-        $test = AssetCategory::with('asset')->find(5);
-        return $test;
+        // $test = AssetCategory::with('asset')->find(5);
+        // return $test;
         // $test = AssetManagement::with('assets')->find(14);
+        // return $test;
+        // $test = AssetManagement::with('employee')->find(28);
         // return $test;
     }
 

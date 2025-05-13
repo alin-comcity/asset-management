@@ -43,7 +43,7 @@ class AssetManagement extends Model
 
     public function employee()
     {
-        return $this->belongsTo(\App\Models\Employee::class, 'emp_id');
+        return $this->belongsTo(Employee::class, 'emp_id');
     }
 
     public function category()
@@ -51,7 +51,6 @@ class AssetManagement extends Model
         return $this->belongsTo(AssetCategory::class, 'cat_id');
     }
 
-    //
     public function assets()
     {
         return $this->belongsToMany(Assets::class, 'asset_asset_managements', 'asset_management_id', 'asset_id');

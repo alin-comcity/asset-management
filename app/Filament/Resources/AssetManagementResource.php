@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Assets;
+use App\Models\Employee;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\AssetManagement;
@@ -40,9 +41,6 @@ class AssetManagementResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable()
-                    ->getOptionLabelFromRecordUsing(function ($record) {
-                        return $record->asset_name;
-                    })
                     ->options(function (callable $get) {
                         $categoryId = $get('asset_cat_id');
 
@@ -50,7 +48,14 @@ class AssetManagementResource extends Resource
                             return [];
                         }
 
-                        return Assets::where('asset_cat_id', $categoryId)->pluck('asset_name', 'id');
+                        return Assets::where('asset_cat_id', $categoryId)
+                            ->with('assetManagements.employee') // eager-load related employee
+                            ->get()
+                            ->mapWithKeys(function ($asset) {
+                                $employeeName = optional($asset->assetManagements->first()?->employee)->emp_name ?? 'Unassigned';
+                                $employeeId = optional($asset->assetManagements->first()?->employee)->emp_id ?? 'Unassigned';
+                                return [$asset->id => "{$asset->asset_name} ({$asset->asset_serial}) - ({$employeeId}-{$employeeName})"];
+                            });
                     })
                     ->reactive()
                     ->visible(fn(callable $get) => $get('asset_cat_id') !== null) // Show only if category selected             
@@ -59,6 +64,7 @@ class AssetManagementResource extends Resource
                             $set('assets', $record->assets->pluck('id')->toArray());
                         }
                     }),
+
 
 
                 Forms\Components\Select::make('emp_id')
@@ -90,8 +96,9 @@ class AssetManagementResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('asset.asset_name')
+                Tables\Columns\TextColumn::make('assets.asset_name')
                     ->label('Asset Name')
+                    ->listWithLineBreaks()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('category.cat_name')
                     ->label('Asset Category')

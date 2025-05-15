@@ -53,6 +53,6 @@ class AssetManagement extends Model
 
     public function assets()
     {
-        return $this->belongsToMany(Assets::class, 'asset_asset_managements', 'asset_management_id', 'asset_id');
+        return $this->belongsToMany(Assets::class, 'asset_asset_management', 'asset_management_id', 'asset_id');
     }
 }

@@ -5,16 +5,12 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Assets;
-use App\Models\Employee;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\AssetManagement;
 use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 use App\Filament\Resources\AssetManagementResource\Pages;
-use App\Filament\Resources\AssetManagementResource\RelationManagers;
 
 class AssetManagementResource extends Resource
 {
@@ -35,7 +31,7 @@ class AssetManagementResource extends Resource
                     ->afterStateUpdated(fn(callable $set) => $set('asset_id', null)), // clear asset_id on category change
 
 
-                Forms\Components\Select::make('assets') // use relationship name!
+                Forms\Components\Select::make('assets')
                     ->label('Assets')
                     ->relationship('assets', 'asset_name')
                     ->multiple()
@@ -49,12 +45,12 @@ class AssetManagementResource extends Resource
                         }
 
                         return Assets::where('asset_cat_id', $categoryId)
-                            ->with('assetManagements.employee') // eager-load related employee
+                            ->with('assetManagements.employee')
                             ->get()
                             ->mapWithKeys(function ($asset) {
                                 $employeeName = optional($asset->assetManagements->first()?->employee)->emp_name ?? 'Unassigned';
-                                $employeeId = optional($asset->assetManagements->first()?->employee)->emp_id ?? 'Unassigned';
-                                return [$asset->id => "{$asset->asset_name} ({$asset->asset_serial}) - ({$employeeId}-{$employeeName})"];
+                                $employeeId = optional($asset->assetManagements->first()?->employee)->emp_id ?? '';
+                                return [$asset->id => "{$asset->asset_name} ({$asset->asset_serial}) - Emp: ({$employeeId}-{$employeeName})"];
                             });
                     })
                     ->reactive()
@@ -98,11 +94,17 @@ class AssetManagementResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('assets.asset_name')
                     ->label('Asset Name')
-                    ->listWithLineBreaks()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('category.cat_name')
-                    ->label('Asset Category')
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(function ($record) {
+                        return $record->assets
+                            ->map(function ($asset) {
+                                $categoryName = optional($asset->category)->cat_name ?? 'No Category';
+                                return "{$asset->asset_name} - ({$categoryName})";
+                            })
+                            ->implode("<br>");
+                    })
+                    ->html(),
+
                 Tables\Columns\TextColumn::make('employee.emp_name')
                     ->label('Employee Name')
                     ->searchable(),
